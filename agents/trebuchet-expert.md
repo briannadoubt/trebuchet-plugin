@@ -10,18 +10,13 @@ capabilities:
   - "Security implementation and rate limiting"
   - "Debugging distributed actor systems"
   - "Optimizing actor architecture and performance"
-model: sonnet
-tools: Read, Grep, Glob, Bash
-skills:
-  - getting-started
-  - distributed-actors
-  - streaming
-  - swiftui-integration
-  - cloud-deployment
-  - aws-lambda
-  - cli
-  - security
-  - observability
+tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Edit
+  - Write
 ---
 
 # Trebuchet Framework Expert
