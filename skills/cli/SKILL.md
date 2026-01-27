@@ -51,8 +51,8 @@ trebuchet init --name my-project --provider aws
 
 **Options:**
 - `--name` (required): Project name
-- `--provider`: Cloud provider (aws, gcp, azure, local)
-- `--region`: Default AWS region
+- `--provider`: Cloud provider (aws, fly)
+- `--region`: Default deployment region
 - `--output`: Output file path (default: trebuchet.yaml)
 
 **Example:**
@@ -89,7 +89,7 @@ trebuchet deploy --provider aws --region us-east-1
 ```
 
 **Options:**
-- `--provider`: Cloud provider (aws, gcp, azure)
+- `--provider`: Cloud provider (aws, fly)
 - `--region`: Deployment region
 - `--environment`: Environment name (production, staging, etc.)
 - `--dry-run`: Preview deployment without making changes
@@ -101,6 +101,9 @@ trebuchet deploy --provider aws --region us-east-1
 ```bash
 # Deploy to AWS in us-east-1
 trebuchet deploy --provider aws --region us-east-1
+
+# Deploy to Fly.io
+trebuchet deploy --provider fly --region iad
 
 # Dry run to preview changes
 trebuchet deploy --dry-run --verbose
@@ -229,34 +232,120 @@ trebuchet dev --port 8080
 ```
 
 **Options:**
-- `--port`: HTTP server port (default: 8080)
-- `--host`: Host to bind to (default: localhost)
-- `--watch`: Auto-reload on file changes
-- `--config`: Path to config file
+- `--port` / `-p`: HTTP server port (default: 8080)
+- `--host` / `-h`: Host to bind to (default: localhost)
+- `--verbose` / `-v`: Enable verbose build output
 
-**Example:**
+**Examples:**
 
 ```bash
-trebuchet dev --port 8080 --watch
+# Start on default port (8080)
+trebuchet dev
+
+# Custom port and host
+trebuchet dev --port 3000 --host 0.0.0.0
+
+# Verbose output
+trebuchet dev --verbose
 ```
+
+**What it does:**
+1. Discovers all `@Trebuchet` actors in your project
+2. Builds your project with `swift build`
+3. Generates a local development runner in `.trebuchet/`
+4. Starts an HTTP server using `CloudGateway.development()`
+5. Exposes actors at `/invoke` endpoint
+6. Provides health check at `/health` endpoint
 
 **Output:**
 
 ```
 Starting local development server...
 
+Found actors:
+  • GameRoom
+  • Lobby
+
+Building project...
+✓ Build succeeded
+
+Generating development server...
+✓ Runner generated
+
+Starting server on localhost:8080...
+
+Starting local development server...
+
+  ✓ Exposed: GameRoom
+  ✓ Exposed: Lobby
+
+Server running on http://localhost:8080
+Health check: http://localhost:8080/health
+Invocation endpoint: http://localhost:8080/invoke
+
+Press Ctrl+C to stop
+```
+
+### trebuchet generate
+
+Generate deployment artifacts.
+
+#### trebuchet generate server
+
+Generate a standalone server package from your actors.
+
+```bash
+trebuchet generate server --output ./my-server
+```
+
+**Options:**
+- `--output`: Output directory for generated server (default: .trebuchet/server)
+- `--config`: Path to trebuchet.yaml
+- `--verbose` / `-v`: Enable verbose output
+- `--force`: Force regeneration even if server exists
+
+**Examples:**
+
+```bash
+# Generate server in default location
+trebuchet generate server
+
+# Generate in custom directory
+trebuchet generate server --output ./deploy/server
+
+# Force regeneration
+trebuchet generate server --force --verbose
+```
+
+**What it does:**
+1. Discovers all `@Trebuchet` actors
+2. Generates a standalone Swift package
+3. Creates Package.swift with dependencies
+4. Generates main.swift with actor bootstrapping
+5. Ready to deploy or run independently
+
+**Output:**
+
+```
+Loading configuration...
+
 Discovering actors...
   ✓ GameRoom
   ✓ Lobby
 
-Starting server on http://localhost:8080
+Generating server package...
+  ✓ Package manifest created
+  ✓ Bootstrap code generated
+  ✓ Server configured
 
-Actors available:
-  GameRoom: http://localhost:8080/actors/GameRoom
-  Lobby: http://localhost:8080/actors/Lobby
+✓ Server package generated at .trebuchet/server
 
-Watching for changes...
-Press Ctrl+C to stop
+To deploy:
+  trebuchet deploy
+
+To run locally:
+  cd .trebuchet/server
+  swift run
 ```
 
 ## Configuration File (trebuchet.yaml)
@@ -324,8 +413,8 @@ state:
 ```
 
 Supported types:
-- `dynamodb`: AWS DynamoDB
-- `postgresql`: PostgreSQL database
+- `dynamodb`: AWS DynamoDB (for AWS deployments)
+- `postgresql` or `postgres`: PostgreSQL database (for Fly.io or custom deployments)
 - `memory`: In-memory (development only)
 
 ### Discovery Configuration
@@ -450,12 +539,13 @@ trebuchet deploy --environment production
 ### Iterative Development
 
 ```bash
-# 1. Run local development server with auto-reload
-trebuchet dev --watch
+# 1. Run local development server
+trebuchet dev --port 8080
 
 # 2. Make changes to actors
 
-# 3. Test changes locally
+# 3. Restart dev server to test changes
+# (Ctrl+C to stop, then run trebuchet dev again)
 
 # 4. Deploy to staging
 trebuchet deploy --environment staging
