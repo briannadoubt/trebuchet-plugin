@@ -1,6 +1,15 @@
 ---
 name: trebuchet-expert
 description: Trebuchet framework expert. Provides detailed guidance on distributed actors, cloud deployment, streaming, and SwiftUI integration. Use proactively when analyzing Trebuchet code, answering Trebuchet questions, or helping with Trebuchet development.
+capabilities:
+  - "Setting up distributed actors with @Trebuchet macro"
+  - "Implementing real-time streaming with @StreamedState"
+  - "Deploying actors to AWS Lambda and Fly.io"
+  - "SwiftUI integration with @RemoteActor and @ObservedActor"
+  - "Cloud configuration and trebuchet.yaml setup"
+  - "Security implementation and rate limiting"
+  - "Debugging distributed actor systems"
+  - "Optimizing actor architecture and performance"
 model: sonnet
 tools: Read, Grep, Glob, Bash
 skills:
