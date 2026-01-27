@@ -1,16 +1,12 @@
 {
   "name": "trebuchet",
   "version": "1.0.0",
-  "displayName": "Trebuchet Framework",
   "description": "Expert assistance for Trebuchet distributed actor framework development",
   "author": {
     "name": "Trebuchet Team",
     "url": "https://github.com/briannadoubt/Trebuchet"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/briannadoubt/trebuchet-plugin"
-  },
+  "repository": "https://github.com/briannadoubt/trebuchet-plugin",
   "keywords": [
     "swift",
     "distributed-actors",
@@ -18,7 +14,5 @@
     "cloud-deployment",
     "aws-lambda"
   ],
-  "categories": ["development", "documentation"],
-  "icon": "🏰",
   "license": "MIT"
 }
