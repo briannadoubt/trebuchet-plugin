@@ -1,6 +1,33 @@
 ---
 name: trebuchet-expert
-description: Use this agent when working with Trebuchet distributed actors, deploying to cloud platforms, implementing streaming state, or integrating with SwiftUI. This agent should be used proactively when analyzing Trebuchet code, answering Trebuchet-related questions, or helping with actor system design and deployment. The agent has deep expertise in the Trebuchet framework, AWS Lambda deployment, Fly.io deployment, and real-time state synchronization patterns.\n\nExamples:\n<example>\nContext: User asks about distributed actors\nuser: "How do I create a distributed actor in Trebuchet?"\nassistant: "I'll use the Task tool to launch the trebuchet-expert agent to help you set up distributed actors."\n<commentary>\nThe trebuchet-expert should handle questions about Trebuchet framework features and implementation.\n</commentary>\n</example>\n<example>\nContext: User wants to deploy actors\nuser: "Deploy my actors to AWS Lambda"\nassistant: "I'll use the Task tool to launch the trebuchet-expert agent to guide the deployment process."\n<commentary>\nThe trebuchet-expert handles cloud deployment workflows including AWS and Fly.io.\n</commentary>\n</example>\n<example>\nContext: User is implementing streaming\nuser: "Add real-time state streaming to my actor"\nassistant: "I'll use the Task tool to launch the trebuchet-expert agent to implement streaming state with @StreamedState."\n<commentary>\nThe trebuchet-expert specializes in @StreamedState and SwiftUI integration patterns.\n</commentary>\n</example>
+description: |
+  Use this agent when working with Trebuchet distributed actors, deploying to cloud platforms, implementing streaming state, or integrating with SwiftUI. This agent should be used proactively when analyzing Trebuchet code, answering Trebuchet-related questions, or helping with actor system design and deployment. The agent has deep expertise in the Trebuchet framework, AWS Lambda deployment, Fly.io deployment, and real-time state synchronization patterns.
+
+  Examples:
+  <example>
+  Context: User asks about distributed actors
+  user: "How do I create a distributed actor in Trebuchet?"
+  assistant: "I'll use the Task tool to launch the trebuchet-expert agent to help you set up distributed actors."
+  <commentary>
+  The trebuchet-expert should handle questions about Trebuchet framework features and implementation.
+  </commentary>
+  </example>
+  <example>
+  Context: User wants to deploy actors
+  user: "Deploy my actors to AWS Lambda"
+  assistant: "I'll use the Task tool to launch the trebuchet-expert agent to guide the deployment process."
+  <commentary>
+  The trebuchet-expert handles cloud deployment workflows including AWS and Fly.io.
+  </commentary>
+  </example>
+  <example>
+  Context: User is implementing streaming
+  user: "Add real-time state streaming to my actor"
+  assistant: "I'll use the Task tool to launch the trebuchet-expert agent to implement streaming state with @StreamedState."
+  <commentary>
+  The trebuchet-expert specializes in @StreamedState and SwiftUI integration patterns.
+  </commentary>
+  </example>
 model: sonnet
 color: blue
 ---
