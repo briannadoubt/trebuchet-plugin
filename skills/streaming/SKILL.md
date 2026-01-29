@@ -171,9 +171,16 @@ Client                          Server
 
 ## Stream Resumption & Reconnection
 
-**Implementation Status**: ✅ Fully Implemented
+**Implementation Status**: ✅ Fully Implemented (as of PR #22, January 2026)
 
 Gracefully handles connection loss with automatic stream resumption, ensuring clients don't miss updates during brief disconnections.
+
+**Core Implementation** (Trebuchet PR #22):
+- `TrebuchetActorSystem.remoteCallStream()` returns `(streamID: UUID, stream: AsyncStream<Res>)` with real stream IDs
+- `StreamRegistry.createResumedStream()` creates streams with specific streamIDs from checkpoints
+- `TrebuchetClient.resumeStream()` sends `StreamResumeEnvelope` to server on reconnection
+- `ObservedActor.attemptStreamResume()` handles automatic client-side stream resumption
+- Server-side replay logic via `WebSocketLambdaHandler` with `ServerStreamBuffer`
 
 ### How It Works
 
