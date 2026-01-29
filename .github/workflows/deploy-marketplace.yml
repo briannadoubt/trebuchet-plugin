@@ -1,0 +1,97 @@
+name: Deploy to Claude Marketplace
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  update-marketplace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin repo
+        uses: actions/checkout@v4
+        with:
+          path: trebuchet-plugin
+
+      - name: Extract version from tag
+        id: tag
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Clone marketplace repo
+        env:
+          GH_TOKEN: ${{ secrets.MARKETPLACE_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/briannadoubt/claude-marketplace.git" marketplace
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure git in marketplace
+        working-directory: marketplace
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "update-trebuchet-plugin-${{ github.ref_name }}"
+
+      - name: Run Claude to update marketplace
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        working-directory: marketplace
+        run: |
+          claude -p "
+          You are updating the briannadoubt/claude-marketplace repository to reflect
+          a new release of the trebuchet plugin.
+
+          New version: ${{ steps.tag.outputs.version }}
+          New tag: ${{ github.ref_name }}
+          Plugin repository: https://github.com/briannadoubt/trebuchet-plugin
+          Plugin description: Expert assistance for Trebuchet distributed actor framework development
+
+          Please do the following:
+          1. Look at the existing structure of this marketplace repository
+          2. Find or create the entry for the trebuchet plugin
+          3. Update the version to ${{ steps.tag.outputs.version }} and tag to ${{ github.ref_name }}
+          4. Update the repository reference to https://github.com/briannadoubt/trebuchet-plugin
+          5. Ensure the README.md of this marketplace repo includes an up-to-date entry for the trebuchet plugin with the correct version, description, and link
+          6. Make sure all file changes are consistent and complete
+          " --dangerously-skip-permissions
+
+      - name: Commit and push changes
+        working-directory: marketplace
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes detected"
+            exit 0
+          fi
+          git commit -m "Update trebuchet plugin to ${{ github.ref_name }}"
+          git push origin "update-trebuchet-plugin-${{ github.ref_name }}"
+
+      - name: Create Pull Request
+        working-directory: marketplace
+        env:
+          GH_TOKEN: ${{ secrets.MARKETPLACE_TOKEN }}
+        run: |
+          gh pr create \
+            --repo briannadoubt/claude-marketplace \
+            --title "Update trebuchet plugin to ${{ github.ref_name }}" \
+            --body "## Automated Plugin Update
+
+          Updates the **trebuchet** plugin to version **${{ steps.tag.outputs.version }}** (tag: \`${{ github.ref_name }}\`).
+
+          ### Changes
+          - Updated plugin version to ${{ steps.tag.outputs.version }}
+          - Verified README is up to date
+
+          ### Source
+          - Plugin repo: https://github.com/briannadoubt/trebuchet-plugin
+          - Release tag: https://github.com/briannadoubt/trebuchet-plugin/releases/tag/${{ github.ref_name }}
+
+          ---
+          *This PR was automatically created by the [trebuchet-plugin CI](https://github.com/briannadoubt/trebuchet-plugin/actions).*" \
+            --base main
