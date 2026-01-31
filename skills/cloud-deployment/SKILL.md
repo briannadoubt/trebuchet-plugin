@@ -172,7 +172,9 @@ struct CartState: Codable, Sendable {
 
 ## Actor-to-Actor Communication
 
-Actors deployed to cloud functions can discover and invoke each other:
+Actors deployed to cloud functions can discover and invoke each other in two ways:
+
+### 1. Via Transport (Client Resolution)
 
 ```swift
 import TrebuchetCloud
@@ -192,6 +194,39 @@ distributed actor GameRoom {
     }
 }
 ```
+
+### 2. Via CloudGateway.process() (Direct Invocation)
+
+**Added in v0.3.0** - For programmatic actor invocation without HTTP overhead:
+
+```swift
+import TrebuchetCloud
+
+let gateway = CloudGateway(configuration: .init(
+    stateStore: stateStore,
+    registry: registry
+))
+
+// Register actors
+try await gateway.expose(myActor, as: "my-actor")
+
+// Programmatic invocation (actor-to-actor, no HTTP)
+let envelope = InvocationEnvelope(
+    callID: UUID(),
+    actorID: TrebuchetActorID(id: "my-actor"),
+    targetIdentifier: "myMethod(param:)",
+    genericSubstitutions: [],
+    arguments: [try JSONEncoder().encode("value")]
+)
+
+let response = await gateway.process(envelope)
+```
+
+**Use cases:**
+- Lambda-to-Lambda communication without API Gateway overhead
+- Local actor-to-actor calls in same process
+- Testing actor methods programmatically
+- Building custom transport layers
 
 ## Local Development
 

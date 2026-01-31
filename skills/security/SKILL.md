@@ -130,6 +130,12 @@ let credentials = Credentials.bearer(token: jwtToken)
 let principal = try await jwtAuth.authenticate(credentials)
 ```
 
+**Migration Note (v0.3.0):** If using the built-in JWT implementation (not recommended for production):
+- `SigningKey.symmetric(secret:)` → Use `SigningKey.hs256(secret:)` instead
+- `SigningKey.asymmetric(publicKey:)` → Use `SigningKey.es256(publicKey:)` instead
+
+For production JWT authentication, integrate a proper JWT library with TrebuchetSecurity's `AuthenticationProvider` protocol.
+
 ### Principal
 
 The `Principal` struct represents an authenticated identity:
