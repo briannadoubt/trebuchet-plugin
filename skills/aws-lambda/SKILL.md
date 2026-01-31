@@ -90,6 +90,115 @@ Deploying to AWS...
 Ready! Actors can discover each other automatically.
 ```
 
+## Production-Ready Features (v0.3.0+)
+
+Trebuchet's AWS integration is built on the official **Soto SDK** (AWS SDK for Swift) for production reliability:
+
+### Soto AWS SDK Integration
+
+- **DynamoDB**: Actor state persistence with optimistic locking
+- **CloudWatch**: Metrics and observability
+- **Cloud Map**: Service discovery
+- **Lambda**: Serverless actor deployment
+- **IAM**: Role management
+- **API Gateway WebSocket**: Connection management
+
+### State Versioning
+
+Actor state uses optimistic concurrency control to prevent lost writes:
+
+```swift
+@Trebuchet
+distributed actor Counter: StatefulActor {
+    typealias PersistentState = CounterState
+
+    var persistentState = CounterState()
+
+    distributed func increment() async throws -> Int {
+        persistentState.count += 1
+        persistentState.version += 1  // Automatic version tracking
+        return persistentState.count
+    }
+}
+
+struct CounterState: Codable, Sendable {
+    var count: Int = 0
+    var version: Int = 0
+}
+```
+
+DynamoDB conditional updates ensure version conflicts are detected:
+- Updates only succeed if the version matches
+- Prevents concurrent writes from overwriting each other
+- Automatic version increment on each state change
+
+### Protocol Versioning
+
+Client-server compatibility is handled automatically:
+- Version negotiation for distributed systems
+- Graceful degradation support
+- Forward and backward compatibility
+
+### Graceful Shutdown
+
+Proper actor lifecycle management:
+- Clean resource cleanup
+- In-flight request completion
+- Connection draining
+- Zero data loss on Lambda shutdown
+
+### TCP Transport for Multi-Instance
+
+For multi-machine deployments (e.g., Fly.io), use TCP transport:
+
+```swift
+// Server-to-server communication
+let transport = TrebuchetTransport.tcp(
+    host: "actor-service.internal",
+    port: 9001
+)
+
+let client = TrebuchetClient(transport: transport)
+try await client.connect()
+```
+
+**TCP Transport Features:**
+- Length-prefixed message framing (4-byte big-endian)
+- Connection pooling with stale connection cleanup
+- Idle timeout (5 minutes) to prevent resource leaks
+- Backpressure handling with 30-second write timeout
+- Optimized EventLoopGroup (2-4 threads for I/O)
+- **Security**: Designed for trusted networks only (no TLS)
+
+### LocalStack Integration Testing
+
+Test your AWS integration locally with LocalStack:
+
+```bash
+# Start LocalStack with all services
+docker-compose -f docker-compose.localstack.yml up -d
+
+# Run integration tests
+swift test --filter TrebuchetAWSTests
+
+# Cleanup
+docker-compose -f docker-compose.localstack.yml down -v
+```
+
+**LocalStack Services Simulated:**
+- Lambda - function deployment/invocation
+- DynamoDB - actor state persistence
+- DynamoDB Streams - real-time state broadcasting
+- Cloud Map - service discovery
+- IAM - role management
+- API Gateway WebSocket - connection management
+
+**Test Features:**
+- Graceful skipping when LocalStack unavailable
+- Automatic test isolation via unique actor IDs
+- Cleanup in defer blocks to prevent resource leaks
+- Healthcheck verification before tests
+
 ## AWS Resources Created
 
 The deployment creates:

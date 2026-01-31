@@ -19,7 +19,7 @@ Add Trebuchet to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/briannadoubt/Trebuchet.git", from: "1.0.0")
+    .package(url: "https://github.com/briannadoubt/Trebuchet.git", from: "0.4.0")
 ]
 ```
 
@@ -31,6 +31,16 @@ Then add it to your target:
     dependencies: ["Trebuchet"]
 )
 ```
+
+### Xcode Projects
+
+Trebuchet works seamlessly with Xcode projects (`.xcodeproj` or `.xcworkspace`):
+
+1. **Add Package Dependency**: In Xcode, go to File → Add Package Dependencies
+2. **Enter URL**: `https://github.com/briannadoubt/Trebuchet.git`
+3. **Select Version**: 0.4.0 or later
+
+The Trebuchet CLI automatically detects Xcode projects with **zero configuration required**. Just run `trebuchet dev` or `trebuchet deploy` in your project directory.
 
 ### CLI Tool
 
@@ -74,7 +84,30 @@ distributed actor Counter {
 }
 ```
 
-The `@Trebuchet` macro automatically adds `typealias ActorSystem = TrebuchetActorSystem` to your actor.
+The `@Trebuchet` macro automatically:
+- Adds `typealias ActorSystem = TrebuchetActorSystem`
+- Adds `TrebuchetActor` protocol conformance (requires `init(actorSystem:)`)
+
+For actors with custom initialization, you can add both the required and custom initializers:
+
+```swift
+@Trebuchet
+distributed actor Counter {
+    private var count: Int
+
+    // Required by TrebuchetActor protocol
+    init(actorSystem: TrebuchetActorSystem) {
+        self.count = 0
+        self.actorSystem = actorSystem
+    }
+
+    // Optional: Custom initializer
+    init(startCount: Int, actorSystem: TrebuchetActorSystem) {
+        self.count = startCount
+        self.actorSystem = actorSystem
+    }
+}
+```
 
 ### Method Requirements
 

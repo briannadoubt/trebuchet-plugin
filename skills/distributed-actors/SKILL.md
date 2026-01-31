@@ -22,13 +22,60 @@ distributed actor GameRoom {
 }
 ```
 
+The `@Trebuchet` macro automatically:
+1. Adds `typealias ActorSystem = TrebuchetActorSystem`
+2. Adds `TrebuchetActor` protocol conformance (since v0.4.0)
+
 This is equivalent to:
 
 ```swift
-distributed actor GameRoom {
+distributed actor GameRoom: TrebuchetActor {
     typealias ActorSystem = TrebuchetActorSystem
 
+    init(actorSystem: TrebuchetActorSystem) {
+        self.actorSystem = actorSystem
+    }
+
     distributed func join(player: Player) -> RoomState
+}
+```
+
+## TrebuchetActor Protocol
+
+All Trebuchet distributed actors must conform to the `TrebuchetActor` protocol (automatically added by `@Trebuchet`):
+
+```swift
+public protocol TrebuchetActor: DistributedActor where ActorSystem == TrebuchetActorSystem {
+    /// Initialize the actor with the given actor system
+    init(actorSystem: TrebuchetActorSystem)
+}
+```
+
+This protocol ensures:
+- Consistent initialization interface across all actors
+- CLI can automatically instantiate actors for dev server and deployment
+- Supports custom initializers alongside the protocol requirement
+
+### Custom Initializers
+
+You can add custom initializers while still conforming to `TrebuchetActor`:
+
+```swift
+@Trebuchet
+distributed actor GameRoom {
+    let maxPlayers: Int
+
+    // Required by TrebuchetActor protocol
+    init(actorSystem: TrebuchetActorSystem) {
+        self.maxPlayers = 10
+        self.actorSystem = actorSystem
+    }
+
+    // Custom initializer for production use
+    init(maxPlayers: Int, actorSystem: TrebuchetActorSystem) {
+        self.maxPlayers = maxPlayers
+        self.actorSystem = actorSystem
+    }
 }
 ```
 
@@ -170,13 +217,20 @@ distributed actor GameRoom {
 
 ## Initialization
 
-Actors must be initialized with an actor system:
+All actors must conform to `TrebuchetActor` protocol (automatically added by `@Trebuchet`), which requires an `init(actorSystem:)` initializer:
 
 ```swift
 @Trebuchet
 distributed actor GameRoom {
     let maxPlayers: Int
 
+    // Required by TrebuchetActor protocol
+    init(actorSystem: TrebuchetActorSystem) {
+        self.maxPlayers = 10
+        self.actorSystem = actorSystem
+    }
+
+    // Optional: Custom initializer for production
     init(maxPlayers: Int, actorSystem: TrebuchetActorSystem) {
         self.maxPlayers = maxPlayers
         self.actorSystem = actorSystem
@@ -188,6 +242,30 @@ let server = TrebuchetServer(transport: .webSocket(port: 8080))
 let room = GameRoom(maxPlayers: 10, actorSystem: server.actorSystem)
 await server.expose(room, as: "main-room")
 ```
+
+## Dynamic Actor Creation
+
+Trebuchet supports creating actors on-demand when clients request them. This is useful for creating per-user actors or game rooms dynamically:
+
+```swift
+let server = TrebuchetServer(transport: .webSocket(port: 8080))
+
+// Register a factory for creating actors on-demand
+server.onActorRequest { (actorType: GameRoom.Type, id: String, system: TrebuchetActorSystem) in
+    let room = GameRoom(actorSystem: system)
+    return room
+}
+
+try await server.run()
+```
+
+When a client tries to resolve an actor that doesn't exist, the server will:
+1. Call the `onActorRequest` callback
+2. Create the actor using the provided factory
+3. Automatically expose it with the requested ID
+4. Return it to the client
+
+This enables lazy actor creation and reduces memory usage for infrequently used actors.
 
 ## Actor Types
 
